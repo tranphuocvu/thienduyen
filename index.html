@@ -114,7 +114,11 @@ const ROLE=['👑 Vua','🥈 Á hậu 1','🥉 Á hậu 2'], WD=['Chủ Nhật',
 const NAMES={tth:['Thừa Thiên Huế','XSTTH'],py:['Phú Yên','XSPY'],mb:['Miền Bắc','XSMB'],dl:['Đắk Lắk','XSDLK'],qna:['Quảng Nam','XSQNM'],dna:['Đà Nẵng','XSDNG'],kh:['Khánh Hòa','XSKH'],bdi:['Bình Định','XSBDI'],qt:['Quảng Trị','XSQT'],qb:['Quảng Bình','XSQB'],gl:['Gia Lai','XSGL'],nt:['Ninh Thuận','XSNT'],qng:['Quảng Ngãi','XSQNG'],dno:['Đắk Nông','XSDNO'],kt:['Kon Tum','XSKT']};
 const SCHED=[['kt','kh','tth'],['tth','py'],['dl','qna'],['dna','kh'],['bdi','qt','qb'],['gl','nt'],['dna','qng','dno']];
 let selDate=new Date();
-const keys=()=>{const a=[...SCHED[selDate.getDay()],'mb'];a.forEach(k=>{if(!S.st[k])S.st[k]={name:NAMES[k][0],tag:NAMES[k][1],nums:['--','--','--'],h:[]}});if(!a.includes(S.tab))S.tab=a[0];return a};
+const keyFor=(id,d)=>id==='mb'?'mb':(d===1&&(id==='tth'||id==='py'))?id:id+'@'+d;
+const DEFN={'dl@2':'61 23 84','qna@2':'57 34 91','dna@3':'49 03 71','kh@3':'50 16 87','bdi@4':'39 72 85','qt@4':'18 52 89','qb@4':'24 59 78','gl@5':'19 45 82','nt@5':'36 07 68','dna@6':'58 14 92','qng@6':'63 27 81','dno@6':'42 05 79','tth@0':'08 00 47','kh@0':'28 64 83','kt@0':'37 12 90'};
+const keys=()=>{const d=selDate.getDay(),a=[...SCHED[d],'mb'].map(id=>({id,k:keyFor(id,d)}));
+  a.forEach(({id,k})=>{const s=S.st[k]||(S.st[k]={name:NAMES[id][0],tag:NAMES[id][1],nums:['--','--','--'],h:[]});if(s.nums[0]==='--'&&DEFN[k])s.nums=DEFN[k].split(' ')});
+  const r=a.map(x=>x.k);if(!r.includes(S.tab))S.tab=r[0];return r};
 const INIT=()=>({tab:'tth',f3:false,
 notes:["📌 Bàn giao chốt khung Thứ Hai (19/10/2026): Tạm ngưng Bộ lọc 3 tầng.","🏆 Thừa Thiên Huế: bộ ba 66 - 54 - 48 ưu tiên số 1.","🎯 Miền Bắc: Tâm điểm 41 nổ 2 nháy ở kỳ gần nhất."],
 st:{
