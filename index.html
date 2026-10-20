@@ -32,7 +32,7 @@ body{font-family:Inter,system-ui,sans-serif}
       <h1 class="text-lg sm:text-2xl font-extrabold">Quản Lý Tần Suất XSMT / XSMB</h1>
       <p class="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
         <span id="fdot" class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 align-middle"></span>
-        Bộ lọc 3 tầng: <b id="ftext"></b> · <label class="relative inline-block cursor-pointer underline decoration-dotted">📅 <span id="today"></span><input id="pick" type="date" onchange="pickDate(this.value)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"></label>
+        Bộ lọc 3 tầng: <b id="ftext"></b> · <label class="relative inline-block cursor-pointer underline decoration-dotted">📅 <span id="today"></span><input id="pick" type="date" onchange="pickDate(this.value)" onclick="try{this.showPicker()}catch(e){}" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"></label>
       </p>
     </div>
     <div class="flex gap-2">
