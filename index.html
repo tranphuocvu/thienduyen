@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quản Lý Tần Suất XSMT / XSMB</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b1220">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tần suất XS">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>tailwind.config={darkMode:'class'}</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{font-family:Inter,system-ui,sans-serif}
+</style>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100 min-h-screen">
+<div id="toasts" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+<div class="max-w-5xl mx-auto px-4 py-5 space-y-5">
+
+<header class="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-200 dark:border-gray-800">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-lg sm:text-2xl font-extrabold">Quản Lý Tần Suất XSMT / XSMB</h1>
+      <p class="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+        <span id="fdot" class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 align-middle"></span>
+        Bộ lọc 3 tầng: <b id="ftext"></b> · <label class="relative inline-block cursor-pointer underline decoration-dotted">📅 <span id="today"></span><input id="pick" type="date" onchange="pickDate(this.value)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"></label>
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="openModal()" class="px-3.5 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95">＋ Thêm kỳ</button>
+      <button onclick="resetAll()" title="Khôi phục dữ liệu gốc" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700">↺</button>
+      <button onclick="toggleTheme()" title="Sáng/Tối" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700">◐</button>
+    </div>
+  </div>
+</header>
+
+<section id="cards" class="grid grid-cols-1 md:grid-cols-3 gap-4"></section>
+
+<section class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+  <div class="p-4 border-b border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h2 class="font-bold">Bảng Heatmap 10 Kỳ Gần Nhất</h2>
+      <p class="text-xs text-gray-500 dark:text-gray-400">Chạm vào ô để đổi số nháy (0 → 1 → 2 → 3)</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <div id="tabs" class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl"></div>
+      <button onclick="editNums()" class="px-3 py-2 rounded-xl text-xs font-semibold border border-gray-200 dark:border-gray-700">Đổi bộ số</button>
+    </div>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-left min-w-[560px] text-sm">
+      <thead><tr id="thead" class="bg-gray-50 dark:bg-gray-800/50 text-xs text-gray-500 dark:text-gray-400"></tr></thead>
+      <tbody id="tbody" class="divide-y divide-gray-100 dark:divide-gray-800"></tbody>
+      <tfoot><tr id="tfoot" class="bg-gray-50 dark:bg-gray-800/40 border-t border-gray-200 dark:border-gray-800"></tr></tfoot>
+    </table>
+  </div>
+</section>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+  <section class="lg:col-span-2 bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-200 dark:border-gray-800">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-bold">Nhật Ký Ghi Chú</h2>
+      <button onclick="clearNotes()" class="text-xs text-red-500 hover:underline">Xóa tất cả</button>
+    </div>
+    <div class="flex gap-2 mb-3">
+      <input id="note" type="text" placeholder="Nhập ghi chú…" onkeydown="if(event.key==='Enter')addNote()" class="flex-1 px-3 py-2 rounded-xl text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+      <button onclick="addNote()" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-gray-900 dark:bg-emerald-600">Lưu</button>
+    </div>
+    <div id="notes" class="space-y-2 max-h-56 overflow-y-auto"></div>
+  </section>
+
+  <section class="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-200 dark:border-gray-800">
+    <h2 class="font-bold mb-3">Cấu Hình</h2>
+    <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
+      <label class="flex items-center justify-between gap-3 cursor-pointer">
+        <span class="text-sm font-semibold">Bộ lọc 3 tầng (Đèn Xanh / Đèn Đỏ)</span>
+        <input id="f3" type="checkbox" onchange="toggleF3()" class="w-5 h-5 accent-emerald-600">
+      </label>
+      <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">Chỉ bật khi có lệnh trực tiếp từ người dùng.</p>
+    </div>
+    <div class="mt-3 grid grid-cols-2 gap-2">
+      <button onclick="exportData()" class="px-3 py-2 rounded-xl text-xs font-semibold border border-gray-200 dark:border-gray-700">Sao lưu</button>
+      <button onclick="importData()" class="px-3 py-2 rounded-xl text-xs font-semibold border border-gray-200 dark:border-gray-700">Nhập lại</button>
+    </div>
+    <p class="mt-3 text-[11px] text-gray-400">Dữ liệu lưu trên máy này. Nên bấm Sao lưu thỉnh thoảng.</p>
+  </section>
+</div>
+</div>
+
+<div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/60">
+  <form onsubmit="addDraw(event)" class="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full p-5 border border-gray-200 dark:border-gray-800 space-y-3">
+    <h3 class="text-lg font-bold">Thêm Kỳ Mở Thưởng</h3>
+    <select id="m-st" onchange="modalLabels()" class="w-full px-3 py-2 rounded-xl text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"></select>
+    <input id="m-date" required placeholder="DD/MM/YYYY" inputmode="numeric" class="w-full px-3 py-2 rounded-xl text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+    <div class="grid grid-cols-3 gap-2" id="m-vals"></div>
+    <div class="flex justify-end gap-2 pt-2">
+      <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-sm text-gray-500">Hủy</button>
+      <button class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-600">Thêm</button>
+    </div>
+  </form>
+</div>
+
+<script>
+const KEYS=['tth','py','mb'], ROLE=['👑 Vua','🥈 Á hậu 1','🥉 Á hậu 2'];
+const INIT=()=>({tab:'tth',f3:false,
+notes:["📌 Bàn giao chốt khung Thứ Hai (19/10/2026): Tạm ngưng Bộ lọc 3 tầng.","🏆 Thừa Thiên Huế: bộ ba 66 - 54 - 48 ưu tiên số 1.","🎯 Miền Bắc: Tâm điểm 41 nổ 2 nháy ở kỳ gần nhất."],
+st:{
+tth:{name:'Thừa Thiên Huế',tag:'XSTTH',nums:['66','54','48'],h:[['12/10/2026',1,1,1],['05/10/2026',1,0,0],['28/09/2026',0,0,1],['21/09/2026',1,1,1],['14/09/2026',1,0,0],['07/09/2026',0,1,0],['31/08/2026',1,1,0],['24/08/2026',1,1,1],['17/08/2026',1,1,1],['10/08/2026',1,1,1]]},
+py:{name:'Phú Yên',tag:'XSPY',nums:['38','15','76'],h:[['12/10/2026',1,0,0],['05/10/2026',1,1,0],['28/09/2026',2,1,0],['21/09/2026',1,0,0],['14/09/2026',1,1,0],['07/09/2026',1,0,1],['31/08/2026',1,0,0],['24/08/2026',1,1,1],['17/08/2026',0,1,1],['10/08/2026',0,1,1]]},
+mb:{name:'Miền Bắc',tag:'XSMB',nums:['41','14','89'],h:[['12/10/2026',2,1,0],['05/10/2026',1,0,1],['28/09/2026',0,1,1],['21/09/2026',1,0,0],['14/09/2026',1,1,1],['07/09/2026',1,0,0],['31/08/2026',1,1,1],['24/08/2026',1,0,0],['17/08/2026',0,1,1],['10/08/2026',1,1,0]]}}});
+let S=INIT();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const save=()=>{try{localStorage.setItem('xs_state',JSON.stringify(S))}catch(e){}};
+function load(){try{const v=JSON.parse(localStorage.getItem('xs_state')||'null');if(v&&v.st&&v.notes)S=v}catch(e){}}
+function toast(m,warn){const t=document.createElement('div');t.className='text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg transition-opacity '+(warn?'bg-amber-600':'bg-gray-800 dark:bg-emerald-600');t.textContent=m;$('toasts').appendChild(t);setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.remove(),300)},2500)}
+const last10=k=>S.st[k].h.slice(0,10);
+
+function renderCards(){
+  const stats=KEYS.map(k=>{const h=last10(k);return [0,1,2].map(i=>h.filter(r=>r[i+1]>0).length)});
+  const sums=stats.map(a=>a[0]+a[1]+a[2]), best=sums.indexOf(Math.max(...sums));
+  $('cards').innerHTML=KEYS.map((k,j)=>{const s=S.st[k],a=stats[j],n=last10(k).length||1,pct=Math.round(sums[j]/(n*3)*100);
+    return `<div class="rounded-2xl p-4 bg-white dark:bg-gray-900 border-2 ${j===best?'border-emerald-500/60':'border-gray-200 dark:border-gray-800'}">
+      <div class="flex justify-between items-start mb-3"><div><div class="text-xs font-bold text-emerald-600 dark:text-emerald-400">Thứ Hai (${s.tag})</div><h3 class="font-bold text-lg">${s.name}</h3></div>
+      <span class="px-2 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">${pct}% nổ${j===best?' 🏆':''}</span></div>
+      ${s.nums.map((x,i)=>`<div class="flex justify-between text-sm py-0.5"><span class="text-gray-500 dark:text-gray-400">${ROLE[i]}</span><span><b class="${i?'':'text-red-600 dark:text-red-400 text-base'}">${x}</b> <span class="text-xs text-gray-400">${a[i]}/${n} kỳ</span></span></div>`).join('')}
+    </div>`}).join('');
+}
+function cell(v){return v===0?'<span class="text-lg opacity-40">⚪</span>':v===1?'<span class="text-lg">🔴</span>':`<span class="px-1.5 py-0.5 rounded-full text-xs font-black bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border border-red-300 dark:border-red-800">🔴 ×${v}</span>`}
+function renderTable(){
+  const k=S.tab,s=S.st[k],h=last10(k);
+  $('tabs').innerHTML=KEYS.map(x=>`<button onclick="setTab('${x}')" class="px-3 py-1.5 rounded-lg text-xs font-bold ${x===k?'bg-white dark:bg-gray-900 shadow-sm':'text-gray-500 dark:text-gray-400'}">${S.st[x].name}</button>`).join('');
+  $('thead').innerHTML='<th class="py-3 px-4">Kỳ mở thưởng</th>'+s.nums.map((x,i)=>`<th class="py-3 px-2 text-center">${ROLE[i]} (${x})</th>`).join('')+'<th class="py-3 px-2 text-center">Tổng</th><th></th>';
+  $('tbody').innerHTML=h.map((r,i)=>{const t=r[1]+r[2]+r[3];return `<tr><td class="py-3 px-4 font-semibold text-xs sm:text-sm">${r[0]}</td>`+
+    [1,2,3].map(f=>`<td class="py-3 px-2 text-center cursor-pointer select-none" onclick="bump(${i},${f})">${cell(r[f])}</td>`).join('')+
+    `<td class="py-3 px-2 text-center text-xs font-extrabold ${t?'text-emerald-600 dark:text-emerald-400':'text-gray-400'}">${t}</td><td class="px-2"><button onclick="delRow(${i})" class="text-gray-400 hover:text-red-500" title="Xóa kỳ">✕</button></td></tr>`}).join('');
+  const c=[1,2,3].map(f=>[h.filter(r=>r[f]>0).length,h.reduce((a,r)=>a+r[f],0)]);
+  $('tfoot').innerHTML=`<td class="py-3 px-4 text-xs uppercase text-gray-500">Tổng (${h.length} kỳ)</td>`+c.map(x=>`<td class="py-3 px-2 text-center text-xs"><b>${x[0]}/${h.length} kỳ</b><br><span class="text-gray-500">${x[1]} nháy</span></td>`).join('')+`<td class="py-3 px-2 text-center text-xs font-extrabold text-emerald-600 dark:text-emerald-400">${c.reduce((a,x)=>a+x[1],0)}</td><td></td>`;
+}
+function setTab(k){S.tab=k;save();renderTable()}
+function bump(i,f){const r=last10(S.tab)[i];r[f]=(r[f]+1)%4;save();renderTable();renderCards()}
+function delRow(i){const r=last10(S.tab)[i];if(confirm('Xóa kỳ '+r[0]+'?')){S.st[S.tab].h.splice(i,1);save();renderTable();renderCards()}}
+function editNums(){const s=S.st[S.tab],v=prompt('Nhập 3 số (Vua, Á hậu 1, Á hậu 2) cách nhau bằng dấu cách:',s.nums.join(' '));if(v===null)return;
+  const a=v.trim().split(/[\s,\-]+/);if(a.length!==3||a.some(x=>!/^\d{2}$/.test(x)))return toast('Cần đúng 3 số, mỗi số 2 chữ số',1);
+  s.nums=a;save();renderTable();renderCards();toast('Đã đổi bộ số')}
+
+function renderNotes(){$('notes').innerHTML=S.notes.length?S.notes.map((n,i)=>`<div class="flex justify-between gap-2 p-2.5 rounded-xl text-xs bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800"><span class="flex-1">${esc(n)}</span><button onclick="delNote(${i})" class="text-gray-400 hover:text-red-500">✕</button></div>`).join(''):'<div class="text-center py-3 text-xs text-gray-400 italic">Chưa có ghi chú.</div>'}
+function addNote(){const v=$('note').value.trim();if(!v)return;S.notes.unshift(v);$('note').value='';save();renderNotes();toast('Đã lưu ghi chú')}
+function delNote(i){S.notes.splice(i,1);save();renderNotes()}
+function clearNotes(){if(confirm('Xóa toàn bộ ghi chú?')){S.notes=[];save();renderNotes()}}
+
+function renderF3(){$('f3').checked=S.f3;$('fdot').className='inline-block w-2.5 h-2.5 rounded-full align-middle '+(S.f3?'bg-emerald-500':'bg-amber-500');
+  $('ftext').textContent=S.f3?'Đã kích hoạt (Đèn Xanh / Đèn Đỏ)':'Đã tạm ngưng (Bật khi có lệnh)';$('ftext').className=S.f3?'text-emerald-600 dark:text-emerald-400':'text-amber-600 dark:text-amber-400'}
+function toggleF3(){S.f3=$('f3').checked;save();renderF3();toast(S.f3?'⚠️ Đã bật Bộ lọc 3 tầng':'Đã tạm ngưng Bộ lọc 3 tầng',S.f3)}
+
+const dp=s=>{const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s);if(!m)return null;const d=new Date(+m[3],+m[2]-1,+m[1]);return d.getDate()==+m[1]&&d.getMonth()==+m[2]-1?d:null};
+function modalLabels(){const s=S.st[$('m-st').value];$('m-vals').innerHTML=s.nums.map((x,i)=>`<div><label class="block text-[11px] font-bold mb-1">${ROLE[i]} (${x})</label><select class="mv w-full px-2 py-2 rounded-xl text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"><option value="0">⚪ Vắng</option><option value="1">🔴 1 nháy</option><option value="2">🔴 ×2</option><option value="3">🔴 ×3</option></select></div>`).join('')}
+function openModal(){$('m-st').innerHTML=KEYS.map(k=>`<option value="${k}">${S.st[k].name}</option>`).join('');$('m-st').value=S.tab;modalLabels();
+  const t=selDate;$('m-date').value=String(t.getDate()).padStart(2,'0')+'/'+String(t.getMonth()+1).padStart(2,'0')+'/'+t.getFullYear();$('modal').classList.remove('hidden');$('modal').classList.add('flex')}
+function closeModal(){$('modal').classList.add('hidden');$('modal').classList.remove('flex')}
+function addDraw(e){e.preventDefault();const k=$('m-st').value,d=$('m-date').value.trim(),h=S.st[k].h;
+  if(!dp(d))return toast('Ngày không hợp lệ (DD/MM/YYYY)',1);
+  if(h.some(r=>r[0]===d))return toast('Kỳ này đã có, hãy sửa trực tiếp trên bảng',1);
+  const v=[...document.querySelectorAll('.mv')].map(x=>+x.value);h.push([d,...v]);h.sort((a,b)=>dp(b[0])-dp(a[0]));
+  S.tab=k;save();closeModal();renderAll();toast('Đã thêm kỳ '+d)}
+
+function exportData(){const j=JSON.stringify(S);(navigator.clipboard?navigator.clipboard.writeText(j):Promise.reject()).then(()=>toast('Đã chép bản sao lưu vào bộ nhớ tạm')).catch(()=>prompt('Chép đoạn này để sao lưu:',j))}
+function importData(){const v=prompt('Dán đoạn sao lưu vào đây:');if(!v)return;try{const o=JSON.parse(v);if(!o.st||!o.notes)throw 0;S=o;save();renderAll();toast('Đã nhập lại dữ liệu')}catch(e){toast('Dữ liệu không hợp lệ',1)}}
+function resetAll(){if(confirm('Khôi phục dữ liệu ban đầu? Mọi chỉnh sửa và ghi chú sẽ mất.')){S=INIT();save();renderAll();toast('Đã khôi phục')}}
+
+function applyTheme(t){document.documentElement.classList.toggle('dark',t==='dark')}
+function toggleTheme(){const t=document.documentElement.classList.contains('dark')?'light':'dark';applyTheme(t);try{localStorage.setItem('xs_theme',t)}catch(e){}}
+function renderAll(){renderCards();renderTable();renderNotes();renderF3()}
+
+load();
+let th=null;try{th=localStorage.getItem('xs_theme')}catch(e){}
+applyTheme(th||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+let selDate=new Date();
+function showDate(){const t=new Date(),p=n=>String(n).padStart(2,'0');
+  $('today').textContent=(selDate.toDateString()===t.toDateString()?'Hôm nay: ':'Ngày chọn: ')+selDate.toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
+  $('pick').value=selDate.getFullYear()+'-'+p(selDate.getMonth()+1)+'-'+p(selDate.getDate())}
+function pickDate(v){if(!v)return;const a=v.split('-').map(Number);selDate=new Date(a[0],a[1]-1,a[2]);showDate()}
+showDate();
+renderAll();
+</script>
+<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script>
+</body>
+</html>
