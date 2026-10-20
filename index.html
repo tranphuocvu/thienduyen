@@ -52,7 +52,7 @@ body{font-family:Inter,system-ui,sans-serif}
       <p class="text-xs text-gray-500 dark:text-gray-400">Chạm vào ô để đổi số nháy (0 → 1 → 2 → 3)</p>
     </div>
     <div class="flex items-center gap-2">
-      <div id="tabs" class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl"></div>
+      <div id="tabs" class="flex max-w-full overflow-x-auto bg-gray-100 dark:bg-gray-800 p-1 rounded-xl"></div>
       <button onclick="editNums()" class="px-3 py-2 rounded-xl text-xs font-semibold border border-gray-200 dark:border-gray-700">Đổi bộ số</button>
     </div>
   </div>
@@ -110,7 +110,11 @@ body{font-family:Inter,system-ui,sans-serif}
 </div>
 
 <script>
-const KEYS=['tth','py','mb'], ROLE=['👑 Vua','🥈 Á hậu 1','🥉 Á hậu 2'];
+const ROLE=['👑 Vua','🥈 Á hậu 1','🥉 Á hậu 2'], WD=['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+const NAMES={tth:['Thừa Thiên Huế','XSTTH'],py:['Phú Yên','XSPY'],mb:['Miền Bắc','XSMB'],dl:['Đắk Lắk','XSDLK'],qna:['Quảng Nam','XSQNM'],dna:['Đà Nẵng','XSDNG'],kh:['Khánh Hòa','XSKH'],bdi:['Bình Định','XSBDI'],qt:['Quảng Trị','XSQT'],qb:['Quảng Bình','XSQB'],gl:['Gia Lai','XSGL'],nt:['Ninh Thuận','XSNT'],qng:['Quảng Ngãi','XSQNG'],dno:['Đắk Nông','XSDNO'],kt:['Kon Tum','XSKT']};
+const SCHED=[['kt','kh','tth'],['tth','py'],['dl','qna'],['dna','kh'],['bdi','qt','qb'],['gl','nt'],['dna','qng','dno']];
+let selDate=new Date();
+const keys=()=>{const a=[...SCHED[selDate.getDay()],'mb'];a.forEach(k=>{if(!S.st[k])S.st[k]={name:NAMES[k][0],tag:NAMES[k][1],nums:['--','--','--'],h:[]}});if(!a.includes(S.tab))S.tab=a[0];return a};
 const INIT=()=>({tab:'tth',f3:false,
 notes:["📌 Bàn giao chốt khung Thứ Hai (19/10/2026): Tạm ngưng Bộ lọc 3 tầng.","🏆 Thừa Thiên Huế: bộ ba 66 - 54 - 48 ưu tiên số 1.","🎯 Miền Bắc: Tâm điểm 41 nổ 2 nháy ở kỳ gần nhất."],
 st:{
@@ -126,21 +130,21 @@ function toast(m,warn){const t=document.createElement('div');t.className='text-w
 const last10=k=>S.st[k].h.slice(0,10);
 
 function renderCards(){
-  const stats=KEYS.map(k=>{const h=last10(k);return [0,1,2].map(i=>h.filter(r=>r[i+1]>0).length)});
+  const K=keys(),stats=K.map(k=>{const h=last10(k);return [0,1,2].map(i=>h.filter(r=>r[i+1]>0).length)});
   const sums=stats.map(a=>a[0]+a[1]+a[2]), best=sums.indexOf(Math.max(...sums));
-  $('cards').innerHTML=KEYS.map((k,j)=>{const s=S.st[k],a=stats[j],n=last10(k).length||1,pct=Math.round(sums[j]/(n*3)*100);
+  $('cards').innerHTML=K.map((k,j)=>{const s=S.st[k],a=stats[j],n=last10(k).length||1,pct=Math.round(sums[j]/(n*3)*100);
     return `<div class="rounded-2xl p-4 bg-white dark:bg-gray-900 border-2 ${j===best?'border-emerald-500/60':'border-gray-200 dark:border-gray-800'}">
-      <div class="flex justify-between items-start mb-3"><div><div class="text-xs font-bold text-emerald-600 dark:text-emerald-400">Thứ Hai (${s.tag})</div><h3 class="font-bold text-lg">${s.name}</h3></div>
+      <div class="flex justify-between items-start mb-3"><div><div class="text-xs font-bold text-emerald-600 dark:text-emerald-400">${WD[selDate.getDay()]} (${s.tag})</div><h3 class="font-bold text-lg">${s.name}</h3></div>
       <span class="px-2 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">${pct}% nổ${j===best?' 🏆':''}</span></div>
       ${s.nums.map((x,i)=>`<div class="flex justify-between text-sm py-0.5"><span class="text-gray-500 dark:text-gray-400">${ROLE[i]}</span><span><b class="${i?'':'text-red-600 dark:text-red-400 text-base'}">${x}</b> <span class="text-xs text-gray-400">${a[i]}/${n} kỳ</span></span></div>`).join('')}
     </div>`}).join('');
 }
 function cell(v){return v===0?'<span class="text-lg opacity-40">⚪</span>':v===1?'<span class="text-lg">🔴</span>':`<span class="px-1.5 py-0.5 rounded-full text-xs font-black bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border border-red-300 dark:border-red-800">🔴 ×${v}</span>`}
 function renderTable(){
-  const k=S.tab,s=S.st[k],h=last10(k);
-  $('tabs').innerHTML=KEYS.map(x=>`<button onclick="setTab('${x}')" class="px-3 py-1.5 rounded-lg text-xs font-bold ${x===k?'bg-white dark:bg-gray-900 shadow-sm':'text-gray-500 dark:text-gray-400'}">${S.st[x].name}</button>`).join('');
+  const K=keys(),k=S.tab,s=S.st[k],h=last10(k);
+  $('tabs').innerHTML=K.map(x=>`<button onclick="setTab('${x}')" class="px-3 py-1.5 whitespace-nowrap rounded-lg text-xs font-bold ${x===k?'bg-white dark:bg-gray-900 shadow-sm':'text-gray-500 dark:text-gray-400'}">${S.st[x].name}</button>`).join('');
   $('thead').innerHTML='<th class="py-3 px-4">Kỳ mở thưởng</th>'+s.nums.map((x,i)=>`<th class="py-3 px-2 text-center">${ROLE[i]} (${x})</th>`).join('')+'<th class="py-3 px-2 text-center">Tổng</th><th></th>';
-  $('tbody').innerHTML=h.map((r,i)=>{const t=r[1]+r[2]+r[3];return `<tr><td class="py-3 px-4 font-semibold text-xs sm:text-sm">${r[0]}</td>`+
+  $('tbody').innerHTML=!h.length?'<tr><td colspan="6" class="py-8 text-center text-xs text-gray-400 italic">Chưa có dữ liệu. Bấm “Đổi bộ số” rồi “＋ Thêm kỳ”.</td></tr>':h.map((r,i)=>{const t=r[1]+r[2]+r[3];return `<tr><td class="py-3 px-4 font-semibold text-xs sm:text-sm">${r[0]}</td>`+
     [1,2,3].map(f=>`<td class="py-3 px-2 text-center cursor-pointer select-none" onclick="bump(${i},${f})">${cell(r[f])}</td>`).join('')+
     `<td class="py-3 px-2 text-center text-xs font-extrabold ${t?'text-emerald-600 dark:text-emerald-400':'text-gray-400'}">${t}</td><td class="px-2"><button onclick="delRow(${i})" class="text-gray-400 hover:text-red-500" title="Xóa kỳ">✕</button></td></tr>`}).join('');
   const c=[1,2,3].map(f=>[h.filter(r=>r[f]>0).length,h.reduce((a,r)=>a+r[f],0)]);
@@ -164,7 +168,7 @@ function toggleF3(){S.f3=$('f3').checked;save();renderF3();toast(S.f3?'⚠️ Đ
 
 const dp=s=>{const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s);if(!m)return null;const d=new Date(+m[3],+m[2]-1,+m[1]);return d.getDate()==+m[1]&&d.getMonth()==+m[2]-1?d:null};
 function modalLabels(){const s=S.st[$('m-st').value];$('m-vals').innerHTML=s.nums.map((x,i)=>`<div><label class="block text-[11px] font-bold mb-1">${ROLE[i]} (${x})</label><select class="mv w-full px-2 py-2 rounded-xl text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"><option value="0">⚪ Vắng</option><option value="1">🔴 1 nháy</option><option value="2">🔴 ×2</option><option value="3">🔴 ×3</option></select></div>`).join('')}
-function openModal(){$('m-st').innerHTML=KEYS.map(k=>`<option value="${k}">${S.st[k].name}</option>`).join('');$('m-st').value=S.tab;modalLabels();
+function openModal(){$('m-st').innerHTML=keys().map(k=>`<option value="${k}">${S.st[k].name}</option>`).join('');$('m-st').value=S.tab;modalLabels();
   const t=selDate;$('m-date').value=String(t.getDate()).padStart(2,'0')+'/'+String(t.getMonth()+1).padStart(2,'0')+'/'+t.getFullYear();$('modal').classList.remove('hidden');$('modal').classList.add('flex')}
 function closeModal(){$('modal').classList.add('hidden');$('modal').classList.remove('flex')}
 function addDraw(e){e.preventDefault();const k=$('m-st').value,d=$('m-date').value.trim(),h=S.st[k].h;
@@ -184,11 +188,10 @@ function renderAll(){renderCards();renderTable();renderNotes();renderF3()}
 load();
 let th=null;try{th=localStorage.getItem('xs_theme')}catch(e){}
 applyTheme(th||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
-let selDate=new Date();
 function showDate(){const t=new Date(),p=n=>String(n).padStart(2,'0');
   $('today').textContent=(selDate.toDateString()===t.toDateString()?'Hôm nay: ':'Ngày chọn: ')+selDate.toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
   $('pick').value=selDate.getFullYear()+'-'+p(selDate.getMonth()+1)+'-'+p(selDate.getDate())}
-function pickDate(v){if(!v)return;const a=v.split('-').map(Number);selDate=new Date(a[0],a[1]-1,a[2]);showDate()}
+function pickDate(v){if(!v)return;const a=v.split('-').map(Number);selDate=new Date(a[0],a[1]-1,a[2]);showDate();renderAll()}
 showDate();
 renderAll();
 </script>
