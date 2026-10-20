@@ -1,204 +1,812 @@
 <!DOCTYPE html>
 <html lang="vi" class="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Quản Lý Tần Suất XSMT / XSMB</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0b1220">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Tần suất XS">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" href="icon-192.png">
-<script src="https://cdn.tailwindcss.com/3.4.17"></script>
-<script>tailwind.config={darkMode:'class'}</script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-<style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{font-family:Inter,system-ui,sans-serif}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Hệ Thống Quản Lý & Phân Tích Tần Suất XSMT / XSMB</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0b1220">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tần suất XS">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" href="icon-192.png">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        },
+                        fire: {
+                            500: '#ef4444',
+                            600: '#dc2626',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+        }
+    :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100 min-h-screen">
-<div id="toasts" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100 min-h-screen transition-colors duration-200">
 
-<div class="max-w-5xl mx-auto px-4 py-5 space-y-5">
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-<header class="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-200 dark:border-gray-800">
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <div>
-      <h1 class="text-lg sm:text-2xl font-extrabold">Quản Lý Tần Suất XSMT / XSMB</h1>
-      <p class="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-        <span id="fdot" class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 align-middle"></span>
-        Bộ lọc 3 tầng: <b id="ftext"></b> · <label class="relative inline-block cursor-pointer underline decoration-dotted">📅 <span id="today"></span><input id="pick" type="date" onchange="pickDate(this.value)" onclick="try{this.showPicker()}catch(e){}" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"></label>
-      </p>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- HEADER & TOOLBAR -->
+        <header class="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-gray-800 transition-all">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                
+                <!-- Title & System Status -->
+                <div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+                            Hệ Thống Quản Lý & Phân Tích Tần Suất XSMT / XSMB
+                        </h1>
+                        <!-- Main calculation method badge -->
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                            <i class="fa-solid me-1.5 fa-circle-check text-emerald-500"></i> Cách tính bản đầu
+                        </span>
+                    </div>
+
+                    <!-- Status Bar -->
+                    <div class="mt-2 flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                        <span class="inline-flex items-center gap-1.5 font-medium">
+                            <span id="filter-status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                            Bộ lọc 3 tầng: <strong id="filter-status-text" class="text-amber-600 dark:text-amber-400">Đã tạm ngưng (Bật khi có lệnh)</strong>
+                        </span>
+                        <span class="hidden sm:inline text-gray-300 dark:text-gray-700">|</span>
+                        <span class="relative cursor-pointer"><i class="fa-regular fa-calendar-days me-1"></i> <span id="today-label">Hôm nay:</span> <strong id="today-date" class="text-gray-800 dark:text-gray-200 underline decoration-dotted"></strong><input id="date-pick" type="date" onchange="pickDate(this.value)" onclick="try{this.showPicker()}catch(e){}" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"></span>
+                    </div>
+                </div>
+
+                <!-- Action Toolbar Buttons -->
+                <div class="flex items-center gap-2 self-end lg:self-center">
+                    <!-- New Draw Entry Button -->
+                    <button onclick="openModal('add-draw-modal')" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 shadow-sm transition-all active:scale-95">
+                        <i class="fa-solid fa-plus"></i>
+                        <span class="hidden sm:inline">Thêm kỳ mở thưởng</span>
+                        <span class="sm:hidden">Thêm kỳ</span>
+                    </button>
+
+                    <!-- Reset Data Button -->
+                    <button onclick="confirmResetData()" title="Khôi phục dữ liệu gốc" class="p-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 transition-all">
+                        <i class="fa-solid fa-rotate"></i>
+                    </button>
+
+                    <!-- Dark / Light Theme Toggle -->
+                    <button id="theme-toggle" onclick="toggleTheme()" class="p-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 transition-all">
+                        <span id="theme-icon"><i class="fa-solid fa-moon"></i></span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- SECTION 2: PROBABILITY OVERVIEW & SUGGESTIONS -->
+        <section id="cards-section" class="grid grid-cols-1 md:grid-cols-3 gap-4"></section>
+
+        <!-- SECTION 3: HEATMAP STATISTICAL TABLE WITH TABS -->
+        <section class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+            
+            <!-- Table Header Controls -->
+            <div class="p-5 border-b border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-fire text-red-500"></i>
+                        Bảng Thống Kê Heatmap 10 Kỳ Gần Nhất
+                    </h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        Chạm hoặc nhấp vào ô đỏ/trắng để chuyển đổi nháy trực tiếp trên bảng
+                    </p>
+                </div>
+
+                <!-- Tabs Selector -->
+                <div id="tabs-container" class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl self-start sm:self-auto max-w-full overflow-x-auto"></div>
+            </div>
+
+            <!-- Heatmap Table Display Container -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[600px]">
+                    <thead>
+                        <tr class="bg-gray-50 dark:bg-gray-800/50 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800">
+                            <th id="col-date" class="py-3 px-4 font-semibold">Kỳ mở thưởng (Thứ 2)</th>
+                            <th id="col-king" class="py-3 px-4 font-bold text-center text-red-600 dark:text-red-400">👑 Vua</th>
+                            <th id="col-runner1" class="py-3 px-4 font-bold text-center text-gray-800 dark:text-gray-200">🥈 Á hậu 1</th>
+                            <th id="col-runner2" class="py-3 px-4 font-bold text-center text-gray-800 dark:text-gray-200">🥉 Á hậu 2</th>
+                            <th class="py-3 px-4 font-semibold text-center">Tổng nháy kỳ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="heatmap-table-body" class="divide-y divide-gray-100 dark:divide-gray-800/60 text-sm">
+                        <!-- Dynamic rows injected via JS -->
+                    </tbody>
+                    <tfoot class="bg-gray-50 dark:bg-gray-800/40 font-bold border-t border-gray-200 dark:border-gray-800">
+                        <tr id="heatmap-table-foot">
+                            <!-- Dynamic summary injected via JS -->
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Heatmap Legend -->
+            <div class="px-5 py-3 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-between text-xs text-gray-500 dark:text-gray-400 gap-2">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center gap-1.5"><span class="text-base">🔴</span> Có nháy (Đỏ)</span>
+                    <span class="flex items-center gap-1.5"><span class="text-base">⚪</span> Vắng (Trắng)</span>
+                    <span class="flex items-center gap-1.5"><span class="px-1.5 py-0.5 rounded text-[10px] bg-red-100 text-red-700 font-extrabold dark:bg-red-950 dark:text-red-300">🔴 x2</span> Nhiều nháy</span>
+                </div>
+                <div>
+                    <span class="italic"><i class="fa-solid fa-hand-pointer me-1"></i>Nhấp trực tiếp vào ô để sửa dữ liệu</span>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- SECTION 4 & 5: HANDOVER LOGS & FILTER CONFIGURATION -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left 2 Cols: Handover Notes & Expert Messages -->
+            <div class="lg:col-span-2 bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-clipboard-list text-emerald-500"></i>
+                            Nhật Ký Trao Đổi & Bàn Giao Cầu
+                        </h2>
+                        <span class="text-xs text-gray-400">Tự động lưu LocalStorage</span>
+                    </div>
+
+                    <!-- Note input formulation -->
+                    <div class="flex gap-2 mb-4">
+                        <input id="new-note-input" type="text" placeholder="Nhập ghi chú chiến thuật, đường chạy hoặc trao đổi với Chuyên Gia..." class="flex-1 px-3.5 py-2 rounded-xl text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <button onclick="addHandoverNote()" class="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white dark:bg-emerald-600 dark:hover:bg-emerald-500 rounded-xl text-sm font-semibold transition-all">
+                            Lưu
+                        </button>
+                    </div>
+
+                    <!-- Notes List -->
+                    <div id="notes-list-container" class="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
+                        <!-- Dynamic Notes -->
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 flex justify-between items-center">
+                    <span id="handover-note"></span>
+                    <button onclick="clearNotes()" class="text-red-500 hover:underline">Xóa tất cả ghi chú</button>
+                </div>
+            </div>
+
+            <!-- Right Col: Filter Config & Controls -->
+            <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                        <i class="fa-solid fa-sliders text-amber-500"></i>
+                        Cấu Hình Bộ Lọc
+                    </h2>
+
+                    <!-- Filter 3-Tier Switch -->
+                    <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-sm text-gray-800 dark:text-gray-200">
+                                Bộ lọc 3 tầng (Đèn Xanh / Đèn Đỏ)
+                            </span>
+                            <!-- Toggle switch -->
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="filter-toggle-switch" onchange="toggleThreeTierFilter()" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:after:border-gray-600 peer-checked:bg-emerald-600"></div>
+                            </label>
+                        </div>
+                        <p class="text-xs text-amber-600 dark:text-amber-400 font-medium leading-relaxed bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded-lg border border-amber-200/50 dark:border-amber-800/50">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                            Cảnh báo: Chỉ tái kích hoạt Bộ lọc 3 tầng ngay lập tức khi có lệnh trực tiếp từ người dùng.
+                        </p>
+                    </div>
+
+                    <div class="mt-4 space-y-2 text-xs text-gray-500 dark:text-gray-400">
+                        <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
+                            <span>Chế độ mặc định:</span>
+                            <span class="font-bold text-gray-700 dark:text-gray-300">Cách tính bản đầu</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
+                            <span>Cấu hình ô hiển thị:</span>
+                            <span class="font-bold text-gray-700 dark:text-gray-300">Vua & 2 Á hậu (Không lót)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 text-center">
+                    <span class="text-[11px] text-gray-400">Hệ thống đồng bộ trực tiếp • Ver 2.0</span>
+                </div>
+            </div>
+
+        </div>
+
     </div>
-    <div class="flex gap-2">
-      <button onclick="openModal()" class="px-3.5 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95">＋ Thêm kỳ</button>
-      <button onclick="resetAll()" title="Khôi phục dữ liệu gốc" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700">↺</button>
-      <button onclick="toggleTheme()" title="Sáng/Tối" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700">◐</button>
+
+    <!-- MODAL: ADD NEW DRAW RESULT -->
+    <div id="add-draw-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full p-6 shadow-xl border border-gray-200 dark:border-gray-800 transform transition-all">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Thêm Kỳ Mở Thưởng Mới</h3>
+                <button onclick="closeModal('add-draw-modal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="add-draw-form" onsubmit="handleAddDraw(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Chọn Đài / Miền</label>
+                    <select id="modal-station-select" onchange="updateModalNumberInputs()" class="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Ngày Mở Thưởng</label>
+                    <input type="text" id="modal-date-input" required placeholder="DD/MM/YYYY" class="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label id="label-king" class="block text-[11px] font-bold text-red-600 dark:text-red-400 mb-1">👑 Vua (66)</label>
+                        <select id="modal-king-val" class="w-full px-2 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white">
+                            <option value="0">⚪ Vắng</option>
+                            <option value="1">🔴 1 Nháy</option>
+                            <option value="2">🔴 x2 Nháy</option>
+                            <option value="3">🔴 x3 Nháy</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label id="label-runner1" class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">🥈 Á hậu 1 (54)</label>
+                        <select id="modal-runner1-val" class="w-full px-2 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white">
+                            <option value="0">⚪ Vắng</option>
+                            <option value="1">🔴 1 Nháy</option>
+                            <option value="2">🔴 x2 Nháy</option>
+                            <option value="3">🔴 x3 Nháy</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label id="label-runner2" class="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">🥉 Á hậu 2 (48)</label>
+                        <select id="modal-runner2-val" class="w-full px-2 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white">
+                            <option value="0">⚪ Vắng</option>
+                            <option value="1">🔴 1 Nháy</option>
+                            <option value="2">🔴 x2 Nháy</option>
+                            <option value="3">🔴 x3 Nháy</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    <button type="button" onclick="closeModal('add-draw-modal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">Hủy</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-sm">Thêm Mới</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
-</header>
 
-<section id="cards" class="grid grid-cols-1 md:grid-cols-3 gap-4"></section>
+    <!-- MAIN JAVASCRIPT LOGIC -->
+    <script>
+        // DEFAULT INITIALIZATION DATA FOR 10 MONDAYS
+        const INITIAL_STATIONS_DATA = {
+            tth: {
+                name: "Thừa Thiên Huế",
+                king: "66",
+                runner1: "54",
+                runner2: "48",
+                history: [
+                    { date: "12/10/2026", king: 1, runner1: 1, runner2: 1 },
+                    { date: "05/10/2026", king: 1, runner1: 0, runner2: 0 },
+                    { date: "28/09/2026", king: 0, runner1: 0, runner2: 1 },
+                    { date: "21/09/2026", king: 1, runner1: 1, runner2: 1 },
+                    { date: "14/09/2026", king: 1, runner1: 0, runner2: 0 },
+                    { date: "07/09/2026", king: 0, runner1: 1, runner2: 0 },
+                    { date: "31/08/2026", king: 1, runner1: 1, runner2: 0 },
+                    { date: "24/08/2026", king: 1, runner1: 1, runner2: 1 },
+                    { date: "17/08/2026", king: 1, runner1: 1, runner2: 1 },
+                    { date: "10/08/2026", king: 1, runner1: 1, runner2: 1 }
+                ]
+            },
+            py: {
+                name: "Phú Yên",
+                king: "38",
+                runner1: "15",
+                runner2: "76",
+                history: [
+                    { date: "12/10/2026", king: 1, runner1: 0, runner2: 0 },
+                    { date: "05/10/2026", king: 1, runner1: 1, runner2: 0 },
+                    { date: "28/09/2026", king: 2, runner1: 1, runner2: 0 },
+                    { date: "21/09/2026", king: 1, runner1: 0, runner2: 0 },
+                    { date: "14/09/2026", king: 1, runner1: 1, runner2: 0 },
+                    { date: "07/09/2026", king: 1, runner1: 0, runner2: 1 },
+                    { date: "31/08/2026", king: 1, runner1: 0, runner2: 0 },
+                    { date: "24/08/2026", king: 1, runner1: 1, runner2: 1 },
+                    { date: "17/08/2026", king: 0, runner1: 1, runner2: 1 },
+                    { date: "10/08/2026", king: 0, runner1: 1, runner2: 1 }
+                ]
+            },
+            mb: {
+                name: "Miền Bắc",
+                king: "41",
+                runner1: "14",
+                runner2: "89",
+                history: [
+                    { date: "12/10/2026", king: 2, runner1: 1, runner2: 0 },
+                    { date: "05/10/2026", king: 1, runner1: 0, runner2: 1 },
+                    { date: "28/09/2026", king: 0, runner1: 1, runner2: 1 },
+                    { date: "21/09/2026", king: 1, runner1: 0, runner2: 0 },
+                    { date: "14/09/2026", king: 1, runner1: 1, runner2: 1 },
+                    { date: "07/09/2026", king: 1, runner1: 0, runner2: 0 },
+                    { date: "31/08/2026", king: 1, runner1: 1, runner2: 1 },
+                    { date: "24/08/2026", king: 1, runner1: 0, runner2: 0 },
+                    { date: "17/08/2026", king: 0, runner1: 1, runner2: 1 },
+                    { date: "10/08/2026", king: 1, runner1: 1, runner2: 0 }
+                ]
+            }
+        };
 
-<section class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-  <div class="p-4 border-b border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3">
-    <div>
-      <h2 class="font-bold">Bảng Heatmap 10 Kỳ Gần Nhất</h2>
-      <p class="text-xs text-gray-500 dark:text-gray-400">Chạm vào ô để đổi số nháy (0 → 1 → 2 → 3)</p>
-    </div>
-    <div class="flex items-center gap-2">
-      <div id="tabs" class="flex max-w-full overflow-x-auto bg-gray-100 dark:bg-gray-800 p-1 rounded-xl"></div>
-      <button onclick="editNums()" class="px-3 py-2 rounded-xl text-xs font-semibold border border-gray-200 dark:border-gray-700">Đổi bộ số</button>
-    </div>
-  </div>
-  <div class="overflow-x-auto">
-    <table class="w-full text-left min-w-[560px] text-sm">
-      <thead><tr id="thead" class="bg-gray-50 dark:bg-gray-800/50 text-xs text-gray-500 dark:text-gray-400"></tr></thead>
-      <tbody id="tbody" class="divide-y divide-gray-100 dark:divide-gray-800"></tbody>
-      <tfoot><tr id="tfoot" class="bg-gray-50 dark:bg-gray-800/40 border-t border-gray-200 dark:border-gray-800"></tr></tfoot>
-    </table>
-  </div>
-</section>
+        const INITIAL_NOTES = [
+            "📌 Bàn giao chốt khung Thứ Hai (19/10/2026): Tạm ngưng Bộ lọc 3 tầng.",
+            "🏆 Thừa Thiên Huế: Điểm nổ rơi cực kỳ đồng đều, bộ ba 66 - 54 - 48 ưu tiên số 1.",
+            "🎯 Miền Bắc: Tâm điểm 41 nổ 2 nháy ở kỳ gần nhất."
+        ];
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-  <section class="lg:col-span-2 bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-200 dark:border-gray-800">
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="font-bold">Nhật Ký Ghi Chú</h2>
-      <button onclick="clearNotes()" class="text-xs text-red-500 hover:underline">Xóa tất cả</button>
-    </div>
-    <div class="flex gap-2 mb-3">
-      <input id="note" type="text" placeholder="Nhập ghi chú…" onkeydown="if(event.key==='Enter')addNote()" class="flex-1 px-3 py-2 rounded-xl text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-      <button onclick="addNote()" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-gray-900 dark:bg-emerald-600">Lưu</button>
-    </div>
-    <div id="notes" class="space-y-2 max-h-56 overflow-y-auto"></div>
-  </section>
+        // GLOBAL APP STATE
+        const LS = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+        const $ = id => document.getElementById(id);
+        const WD = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+        const NAMES = { tth:['Thừa Thiên Huế','XSTTH'], py:['Phú Yên','XSPY'], mb:['Miền Bắc','XSMB'], dl:['Đắk Lắk','XSDLK'], qna:['Quảng Nam','XSQNM'], dna:['Đà Nẵng','XSDNG'], kh:['Khánh Hòa','XSKH'], bdi:['Bình Định','XSBDI'], qt:['Quảng Trị','XSQT'], qb:['Quảng Bình','XSQB'], gl:['Gia Lai','XSGL'], nt:['Ninh Thuận','XSNT'], qng:['Quảng Ngãi','XSQNG'], dno:['Đắk Nông','XSDNO'], kt:['Kon Tum','XSKT'] };
+        // Lịch mở thưởng XSMT theo thứ (0 = Chủ Nhật) + Miền Bắc mỗi ngày
+        const SCHED = [['kt','kh','tth'], ['tth','py'], ['dl','qna'], ['dna','kh'], ['bdi','qt','qb'], ['gl','nt'], ['dna','qng','dno']];
+        // Bộ ba: Vua, Á hậu 1, Á hậu 2
+        const DEFN = { 'dl@2':'61 23 84','qna@2':'57 34 91','dna@3':'49 03 71','kh@3':'50 16 87','bdi@4':'39 72 85','qt@4':'18 52 89','qb@4':'24 59 78','gl@5':'19 45 82','nt@5':'36 07 68','dna@6':'58 14 92','qng@6':'63 27 81','dno@6':'42 05 79','tth@0':'08 00 47','kh@0':'28 64 83','kt@0':'37 12 90' };
+        const STY = [
+            { lab:'text-emerald-600 dark:text-emerald-400', badge:'font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800', icon:'fa-chart-line text-emerald-500' },
+            { lab:'text-blue-600 dark:text-blue-400', badge:'font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-800', icon:'fa-shield-halved text-blue-500' },
+            { lab:'text-amber-600 dark:text-amber-400', badge:'font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800', icon:'fa-bolt text-amber-500' },
+            { lab:'text-violet-600 dark:text-violet-400', badge:'font-bold bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-300 border border-violet-300 dark:border-violet-800', icon:'fa-fire text-violet-500' }
+        ];
+        let selDate = new Date();
 
-  <section class="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-200 dark:border-gray-800">
-    <h2 class="font-bold mb-3">Cấu Hình</h2>
-    <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
-      <label class="flex items-center justify-between gap-3 cursor-pointer">
-        <span class="text-sm font-semibold">Bộ lọc 3 tầng (Đèn Xanh / Đèn Đỏ)</span>
-        <input id="f3" type="checkbox" onchange="toggleF3()" class="w-5 h-5 accent-emerald-600">
-      </label>
-      <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">Chỉ bật khi có lệnh trực tiếp từ người dùng.</p>
-    </div>
-    <div class="mt-3 grid grid-cols-2 gap-2">
-      <button onclick="exportData()" class="px-3 py-2 rounded-xl text-xs font-semibold border border-gray-200 dark:border-gray-700">Sao lưu</button>
-      <button onclick="importData()" class="px-3 py-2 rounded-xl text-xs font-semibold border border-gray-200 dark:border-gray-700">Nhập lại</button>
-    </div>
-    <p class="mt-3 text-[11px] text-gray-400">Dữ liệu lưu trên máy này. Nên bấm Sao lưu thỉnh thoảng.</p>
-  </section>
-</div>
-</div>
+        let appState = {
+            currentTab: 'tth',
+            filter3TierActive: false,
+            stations: JSON.parse(JSON.stringify(INITIAL_STATIONS_DATA)),
+            notes: [...INITIAL_NOTES]
+        };
 
-<div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/60">
-  <form onsubmit="addDraw(event)" class="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full p-5 border border-gray-200 dark:border-gray-800 space-y-3">
-    <h3 class="text-lg font-bold">Thêm Kỳ Mở Thưởng</h3>
-    <select id="m-st" onchange="modalLabels()" class="w-full px-3 py-2 rounded-xl text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"></select>
-    <input id="m-date" required placeholder="DD/MM/YYYY" inputmode="numeric" class="w-full px-3 py-2 rounded-xl text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-    <div class="grid grid-cols-3 gap-2" id="m-vals"></div>
-    <div class="flex justify-end gap-2 pt-2">
-      <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-sm text-gray-500">Hủy</button>
-      <button class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-600">Thêm</button>
-    </div>
-  </form>
-</div>
+        const keyFor = (id, d) => id === 'mb' ? (d === 1 ? 'mb' : 'mb@' + d) : ((d === 1 && (id === 'tth' || id === 'py')) ? id : id + '@' + d);
 
-<script>
-const ROLE=['👑 Vua','🥈 Á hậu 1','🥉 Á hậu 2'], WD=['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
-const NAMES={tth:['Thừa Thiên Huế','XSTTH'],py:['Phú Yên','XSPY'],mb:['Miền Bắc','XSMB'],dl:['Đắk Lắk','XSDLK'],qna:['Quảng Nam','XSQNM'],dna:['Đà Nẵng','XSDNG'],kh:['Khánh Hòa','XSKH'],bdi:['Bình Định','XSBDI'],qt:['Quảng Trị','XSQT'],qb:['Quảng Bình','XSQB'],gl:['Gia Lai','XSGL'],nt:['Ninh Thuận','XSNT'],qng:['Quảng Ngãi','XSQNG'],dno:['Đắk Nông','XSDNO'],kt:['Kon Tum','XSKT']};
-const SCHED=[['kt','kh','tth'],['tth','py'],['dl','qna'],['dna','kh'],['bdi','qt','qb'],['gl','nt'],['dna','qng','dno']];
-let selDate=new Date();
-const keyFor=(id,d)=>id==='mb'?'mb':(d===1&&(id==='tth'||id==='py'))?id:id+'@'+d;
-const DEFN={'dl@2':'61 23 84','qna@2':'57 34 91','dna@3':'49 03 71','kh@3':'50 16 87','bdi@4':'39 72 85','qt@4':'18 52 89','qb@4':'24 59 78','gl@5':'19 45 82','nt@5':'36 07 68','dna@6':'58 14 92','qng@6':'63 27 81','dno@6':'42 05 79','tth@0':'08 00 47','kh@0':'28 64 83','kt@0':'37 12 90'};
-const keys=()=>{const d=selDate.getDay(),a=[...SCHED[d],'mb'].map(id=>({id,k:keyFor(id,d)}));
-  a.forEach(({id,k})=>{const s=S.st[k]||(S.st[k]={name:NAMES[id][0],tag:NAMES[id][1],nums:['--','--','--'],h:[]});if(s.nums[0]==='--'&&DEFN[k])s.nums=DEFN[k].split(' ')});
-  const r=a.map(x=>x.k);if(!r.includes(S.tab))S.tab=r[0];return r};
-const INIT=()=>({tab:'tth',f3:false,
-notes:["📌 Bàn giao chốt khung Thứ Hai (19/10/2026): Tạm ngưng Bộ lọc 3 tầng.","🏆 Thừa Thiên Huế: bộ ba 66 - 54 - 48 ưu tiên số 1.","🎯 Miền Bắc: Tâm điểm 41 nổ 2 nháy ở kỳ gần nhất."],
-st:{
-tth:{name:'Thừa Thiên Huế',tag:'XSTTH',nums:['66','54','48'],h:[['12/10/2026',1,1,1],['05/10/2026',1,0,0],['28/09/2026',0,0,1],['21/09/2026',1,1,1],['14/09/2026',1,0,0],['07/09/2026',0,1,0],['31/08/2026',1,1,0],['24/08/2026',1,1,1],['17/08/2026',1,1,1],['10/08/2026',1,1,1]]},
-py:{name:'Phú Yên',tag:'XSPY',nums:['38','15','76'],h:[['12/10/2026',1,0,0],['05/10/2026',1,1,0],['28/09/2026',2,1,0],['21/09/2026',1,0,0],['14/09/2026',1,1,0],['07/09/2026',1,0,1],['31/08/2026',1,0,0],['24/08/2026',1,1,1],['17/08/2026',0,1,1],['10/08/2026',0,1,1]]},
-mb:{name:'Miền Bắc',tag:'XSMB',nums:['41','14','89'],h:[['12/10/2026',2,1,0],['05/10/2026',1,0,1],['28/09/2026',0,1,1],['21/09/2026',1,0,0],['14/09/2026',1,1,1],['07/09/2026',1,0,0],['31/08/2026',1,1,1],['24/08/2026',1,0,0],['17/08/2026',0,1,1],['10/08/2026',1,1,0]]}}});
-let S=INIT();
-const $=id=>document.getElementById(id);
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const save=()=>{try{localStorage.setItem('xs_state',JSON.stringify(S))}catch(e){}};
-function load(){try{const v=JSON.parse(localStorage.getItem('xs_state')||'null');if(v&&v.st&&v.notes)S=v}catch(e){}}
-function toast(m,warn){const t=document.createElement('div');t.className='text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg transition-opacity '+(warn?'bg-amber-600':'bg-gray-800 dark:bg-emerald-600');t.textContent=m;$('toasts').appendChild(t);setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.remove(),300)},2500)}
-const last10=k=>S.st[k].h.slice(0,10);
+        function dayKeys() {
+            const d = selDate.getDay();
+            const list = [...SCHED[d], 'mb'].map(id => ({ id, key: keyFor(id, d) }));
+            list.forEach(({ id, key }) => {
+                const s = appState.stations[key] || (appState.stations[key] = { king: '--', runner1: '--', runner2: '--', history: [] });
+                s.name = NAMES[id][0]; s.tag = NAMES[id][1]; s.id = id;
+                if (s.king === '--' && DEFN[key]) { [s.king, s.runner1, s.runner2] = DEFN[key].split(' '); }
+            });
+            const keys = list.map(x => x.key);
+            if (!keys.includes(appState.currentTab)) appState.currentTab = keys[0];
+            return keys;
+        }
 
-function renderCards(){
-  const K=keys(),stats=K.map(k=>{const h=last10(k);return [0,1,2].map(i=>h.filter(r=>r[i+1]>0).length)});
-  const sums=stats.map(a=>a[0]+a[1]+a[2]), best=sums.indexOf(Math.max(...sums));
-  $('cards').innerHTML=K.map((k,j)=>{const s=S.st[k],a=stats[j],n=last10(k).length||1,pct=Math.round(sums[j]/(n*3)*100);
-    return `<div class="rounded-2xl p-4 bg-white dark:bg-gray-900 border-2 ${j===best?'border-emerald-500/60':'border-gray-200 dark:border-gray-800'}">
-      <div class="flex justify-between items-start mb-3"><div><div class="text-xs font-bold text-emerald-600 dark:text-emerald-400">${WD[selDate.getDay()]} (${s.tag})</div><h3 class="font-bold text-lg">${s.name}</h3></div>
-      <span class="px-2 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">${pct}% nổ${j===best?' 🏆':''}</span></div>
-      ${s.nums.map((x,i)=>`<div class="flex justify-between text-sm py-0.5"><span class="text-gray-500 dark:text-gray-400">${ROLE[i]}</span><span><b class="${i?'':'text-red-600 dark:text-red-400 text-base'}">${x}</b> <span class="text-xs text-gray-400">${a[i]}/${n} kỳ</span></span></div>`).join('')}
-    </div>`}).join('');
-}
-function cell(v){return v===0?'<span class="text-lg opacity-40">⚪</span>':v===1?'<span class="text-lg">🔴</span>':`<span class="px-1.5 py-0.5 rounded-full text-xs font-black bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border border-red-300 dark:border-red-800">🔴 ×${v}</span>`}
-function renderTable(){
-  const K=keys(),k=S.tab,s=S.st[k],h=last10(k);
-  $('tabs').innerHTML=K.map(x=>`<button onclick="setTab('${x}')" class="px-3 py-1.5 whitespace-nowrap rounded-lg text-xs font-bold ${x===k?'bg-white dark:bg-gray-900 shadow-sm':'text-gray-500 dark:text-gray-400'}">${S.st[x].name}</button>`).join('');
-  $('thead').innerHTML='<th class="py-3 px-4">Kỳ mở thưởng</th>'+s.nums.map((x,i)=>`<th class="py-3 px-2 text-center">${ROLE[i]} (${x})</th>`).join('')+'<th class="py-3 px-2 text-center">Tổng</th><th></th>';
-  $('tbody').innerHTML=!h.length?'<tr><td colspan="6" class="py-8 text-center text-xs text-gray-400 italic">Chưa có dữ liệu. Bấm “Đổi bộ số” rồi “＋ Thêm kỳ”.</td></tr>':h.map((r,i)=>{const t=r[1]+r[2]+r[3];return `<tr><td class="py-3 px-4 font-semibold text-xs sm:text-sm">${r[0]}</td>`+
-    [1,2,3].map(f=>`<td class="py-3 px-2 text-center cursor-pointer select-none" onclick="bump(${i},${f})">${cell(r[f])}</td>`).join('')+
-    `<td class="py-3 px-2 text-center text-xs font-extrabold ${t?'text-emerald-600 dark:text-emerald-400':'text-gray-400'}">${t}</td><td class="px-2"><button onclick="delRow(${i})" class="text-gray-400 hover:text-red-500" title="Xóa kỳ">✕</button></td></tr>`}).join('');
-  const c=[1,2,3].map(f=>[h.filter(r=>r[f]>0).length,h.reduce((a,r)=>a+r[f],0)]);
-  $('tfoot').innerHTML=`<td class="py-3 px-4 text-xs uppercase text-gray-500">Tổng (${h.length} kỳ)</td>`+c.map(x=>`<td class="py-3 px-2 text-center text-xs"><b>${x[0]}/${h.length} kỳ</b><br><span class="text-gray-500">${x[1]} nháy</span></td>`).join('')+`<td class="py-3 px-2 text-center text-xs font-extrabold text-emerald-600 dark:text-emerald-400">${c.reduce((a,x)=>a+x[1],0)}</td><td></td>`;
-}
-function setTab(k){S.tab=k;save();renderTable()}
-function bump(i,f){const r=last10(S.tab)[i];r[f]=(r[f]+1)%4;save();renderTable();renderCards()}
-function delRow(i){const r=last10(S.tab)[i];if(confirm('Xóa kỳ '+r[0]+'?')){S.st[S.tab].h.splice(i,1);save();renderTable();renderCards()}}
-function editNums(){const s=S.st[S.tab],v=prompt('Nhập 3 số (Vua, Á hậu 1, Á hậu 2) cách nhau bằng dấu cách:',s.nums.join(' '));if(v===null)return;
-  const a=v.trim().split(/[\s,\-]+/);if(a.length!==3||a.some(x=>!/^\d{2}$/.test(x)))return toast('Cần đúng 3 số, mỗi số 2 chữ số',1);
-  s.nums=a;save();renderTable();renderCards();toast('Đã đổi bộ số')}
+        // ON APP LOAD
+        window.onload = function() {
+            loadFromLocalStorage();
+            applyThemeFromLocal();
+            renderAll();
+            renderHandoverNotes();
+            updateFilterUI();
+        };
 
-function renderNotes(){$('notes').innerHTML=S.notes.length?S.notes.map((n,i)=>`<div class="flex justify-between gap-2 p-2.5 rounded-xl text-xs bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800"><span class="flex-1">${esc(n)}</span><button onclick="delNote(${i})" class="text-gray-400 hover:text-red-500">✕</button></div>`).join(''):'<div class="text-center py-3 text-xs text-gray-400 italic">Chưa có ghi chú.</div>'}
-function addNote(){const v=$('note').value.trim();if(!v)return;S.notes.unshift(v);$('note').value='';save();renderNotes();toast('Đã lưu ghi chú')}
-function delNote(i){S.notes.splice(i,1);save();renderNotes()}
-function clearNotes(){if(confirm('Xóa toàn bộ ghi chú?')){S.notes=[];save();renderNotes()}}
+        function renderAll() {
+            renderDateHeader();
+            renderCards();
+            renderTabs();
+            renderHeatmapTable();
+        }
 
-function renderF3(){$('f3').checked=S.f3;$('fdot').className='inline-block w-2.5 h-2.5 rounded-full align-middle '+(S.f3?'bg-emerald-500':'bg-amber-500');
-  $('ftext').textContent=S.f3?'Đã kích hoạt (Đèn Xanh / Đèn Đỏ)':'Đã tạm ngưng (Bật khi có lệnh)';$('ftext').className=S.f3?'text-emerald-600 dark:text-emerald-400':'text-amber-600 dark:text-amber-400'}
-function toggleF3(){S.f3=$('f3').checked;save();renderF3();toast(S.f3?'⚠️ Đã bật Bộ lọc 3 tầng':'Đã tạm ngưng Bộ lọc 3 tầng',S.f3)}
+        // LOCAL STORAGE HELPERS
+        function saveToLocalStorage() {
+            LS.set('xs_dashboard_state', JSON.stringify(appState));
+        }
 
-const dp=s=>{const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s);if(!m)return null;const d=new Date(+m[3],+m[2]-1,+m[1]);return d.getDate()==+m[1]&&d.getMonth()==+m[2]-1?d:null};
-function modalLabels(){const s=S.st[$('m-st').value];$('m-vals').innerHTML=s.nums.map((x,i)=>`<div><label class="block text-[11px] font-bold mb-1">${ROLE[i]} (${x})</label><select class="mv w-full px-2 py-2 rounded-xl text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"><option value="0">⚪ Vắng</option><option value="1">🔴 1 nháy</option><option value="2">🔴 ×2</option><option value="3">🔴 ×3</option></select></div>`).join('')}
-function openModal(){$('m-st').innerHTML=keys().map(k=>`<option value="${k}">${S.st[k].name}</option>`).join('');$('m-st').value=S.tab;modalLabels();
-  const t=selDate;$('m-date').value=String(t.getDate()).padStart(2,'0')+'/'+String(t.getMonth()+1).padStart(2,'0')+'/'+t.getFullYear();$('modal').classList.remove('hidden');$('modal').classList.add('flex')}
-function closeModal(){$('modal').classList.add('hidden');$('modal').classList.remove('flex')}
-function addDraw(e){e.preventDefault();const k=$('m-st').value,d=$('m-date').value.trim(),h=S.st[k].h;
-  if(!dp(d))return toast('Ngày không hợp lệ (DD/MM/YYYY)',1);
-  if(h.some(r=>r[0]===d))return toast('Kỳ này đã có, hãy sửa trực tiếp trên bảng',1);
-  const v=[...document.querySelectorAll('.mv')].map(x=>+x.value);h.push([d,...v]);h.sort((a,b)=>dp(b[0])-dp(a[0]));
-  S.tab=k;save();closeModal();renderAll();toast('Đã thêm kỳ '+d)}
+        function loadFromLocalStorage() {
+            const saved = LS.get('xs_dashboard_state');
+            if (saved) {
+                try {
+                    const s = JSON.parse(saved);
+                    if (s && s.stations && s.notes) appState = s;
+                } catch(e) {
+                    console.error("Lỗi đọc LocalStorage", e);
+                }
+            }
+        }
 
-function exportData(){const j=JSON.stringify(S);(navigator.clipboard?navigator.clipboard.writeText(j):Promise.reject()).then(()=>toast('Đã chép bản sao lưu vào bộ nhớ tạm')).catch(()=>prompt('Chép đoạn này để sao lưu:',j))}
-function importData(){const v=prompt('Dán đoạn sao lưu vào đây:');if(!v)return;try{const o=JSON.parse(v);if(!o.st||!o.notes)throw 0;S=o;save();renderAll();toast('Đã nhập lại dữ liệu')}catch(e){toast('Dữ liệu không hợp lệ',1)}}
-function resetAll(){if(confirm('Khôi phục dữ liệu ban đầu? Mọi chỉnh sửa và ghi chú sẽ mất.')){S=INIT();save();renderAll();toast('Đã khôi phục')}}
+        function confirmResetData() {
+            if (confirm("Bạn có chắc muốn khôi phục dữ liệu ban đầu không? Mọi ghi chú và chỉnh sửa sẽ quay về mặc định.")) {
+                appState.stations = JSON.parse(JSON.stringify(INITIAL_STATIONS_DATA));
+                appState.notes = [...INITIAL_NOTES];
+                appState.filter3TierActive = false;
+                saveToLocalStorage();
+                renderAll();
+                renderHandoverNotes();
+                updateFilterUI();
+                showToast("Đã khôi phục dữ liệu mặc định!");
+            }
+        }
 
-function applyTheme(t){document.documentElement.classList.toggle('dark',t==='dark')}
-function toggleTheme(){const t=document.documentElement.classList.contains('dark')?'light':'dark';applyTheme(t);try{localStorage.setItem('xs_theme',t)}catch(e){}}
-function renderAll(){renderCards();renderTable();renderNotes();renderF3()}
+        // DATE PICKER
+        function fmtDate(d) {
+            const p = n => String(n).padStart(2, '0');
+            return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
+        }
+        function renderDateHeader() {
+            const d = selDate.getDay(), p = n => String(n).padStart(2, '0');
+            $('today-label').textContent = selDate.toDateString() === new Date().toDateString() ? 'Hôm nay:' : 'Ngày chọn:';
+            $('today-date').textContent = `${WD[d]}, ${fmtDate(selDate)}`;
+            $('date-pick').value = `${selDate.getFullYear()}-${p(selDate.getMonth() + 1)}-${p(selDate.getDate())}`;
+            $('handover-note').textContent = `Đã bàn giao hoàn chỉnh khung chạy ${WD[d]} (${fmtDate(selDate)}).`;
+            $('col-date').textContent = `Kỳ mở thưởng (${d === 0 ? 'Chủ Nhật' : 'Thứ ' + (d + 1)})`;
+        }
+        function pickDate(v) {
+            if (!v) return;
+            const a = v.split('-').map(Number);
+            selDate = new Date(a[0], a[1] - 1, a[2]);
+            renderAll();
+        }
 
-load();
-let th=null;try{th=localStorage.getItem('xs_theme')}catch(e){}
-applyTheme(th||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
-function showDate(){const t=new Date(),p=n=>String(n).padStart(2,'0');
-  $('today').textContent=(selDate.toDateString()===t.toDateString()?'Hôm nay: ':'Ngày chọn: ')+selDate.toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
-  $('pick').value=selDate.getFullYear()+'-'+p(selDate.getMonth()+1)+'-'+p(selDate.getDate())}
-function pickDate(v){if(!v)return;const a=v.split('-').map(Number);selDate=new Date(a[0],a[1]-1,a[2]);showDate();renderAll()}
-showDate();
-renderAll();
-</script>
+        // TAB SWITCHING LOGIC
+        function switchTab(tabKey) {
+            appState.currentTab = tabKey;
+            renderAll();
+        }
+        function renderTabs() {
+            $('tabs-container').innerHTML = dayKeys().map(k => `<button onclick="switchTab('${k}')" id="tab-${k}" class="whitespace-nowrap px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${k === appState.currentTab ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}">${appState.stations[k].name}</button>`).join('');
+        }
+
+        // OVERVIEW CARDS (tính từ bảng heatmap)
+        function stat(s) {
+            const r = s.history.slice(0, 10), sum = f => r.reduce((a, x) => a + x[f], 0);
+            let streak = 0; for (const x of r) { if (x.king > 0) streak++; else break; }
+            const kf = sum('king'), f1 = sum('runner1'), f2 = sum('runner2');
+            return { n: r.length, kf, f1, f2, total: kf + f1 + f2, streak };
+        }
+        function insight(i, s, st) {
+            const kl = s.id === 'mb' ? 'tâm điểm' : 'vua';
+            if (!st.n) return 'Chưa có kỳ nào, bấm “Thêm kỳ mở thưởng” để nhập dữ liệu.';
+            if (i === 0) return `👑 ${s.king} ${st.streak ? `nổ ${st.streak} tuần liên tiếp` : 'chưa nổ kỳ gần nhất'}, tỷ lệ ${st.total}/${st.n * 3} nháy.`;
+            if (i === 1) return `An toàn cao nhờ ${s.id === 'mb' ? 27 : 18} giải, ${kl} ${s.king} nổ ${st.kf} nháy.`;
+            if (i === 2) return `👑 ${s.king} ${st.kf >= Math.max(st.f1, st.f2) ? 'độc tôn' : 'giữ nhịp'} (${st.kf} nháy), 2 Á hậu hơi rải rác.`;
+            return `👑 ${s.king} (${st.kf} nháy), Á hậu ${s.runner1} (${st.f1}), Á hậu ${s.runner2} (${st.f2}).`;
+        }
+        function renderCards() {
+            const d = selDate.getDay();
+            const items = dayKeys().map(k => { const s = appState.stations[k], st = stat(s); return { s, st, score: st.n ? Math.min(10, Math.max(0, 0.7 * st.total - 5.5)) : 0 }; });
+            items.sort((a, b) => b.score - a.score);
+            const sec = $('cards-section');
+            sec.className = items.length >= 4 ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4' : 'grid grid-cols-1 md:grid-cols-3 gap-4';
+            sec.innerHTML = items.map(({ s, st, score }, i) => {
+                const c = STY[i], top = i === 0 && st.n > 0;
+                const lab = score >= 9 ? 'Rất Cao' : score >= 8 ? 'Cao' : score >= 7 ? 'Khá' : score >= 5 ? 'Trung Bình' : 'Thấp';
+                const badge = st.n ? `${score.toFixed(1)}/10 ${top ? '🏆 ' : ''}${lab}` : 'Chưa có dữ liệu';
+                const bcls = st.n ? c.badge : 'font-bold bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border border-gray-300 dark:border-gray-700';
+                const row = (t, v, big) => `<div class="flex items-center justify-between text-sm"><span class="text-gray-500 dark:text-gray-400">${t}</span><span class="${big ? 'font-extrabold text-red-600 dark:text-red-400 text-base' : 'font-bold text-gray-800 dark:text-gray-200'}">${v}</span></div>`;
+                return `<div class="relative overflow-hidden bg-white dark:bg-gray-900 rounded-2xl p-5 ${top ? 'border-2 border-emerald-500/50 dark:border-emerald-500/40' : 'border border-gray-200 dark:border-gray-800'} shadow-sm hover:shadow-md transition-all">
+                    ${top ? '<div class="absolute -right-4 -top-4 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>' : ''}
+                    <div class="flex justify-between items-start mb-3">
+                        <div><span class="text-xs font-bold uppercase tracking-wider ${c.lab}">${WD[d]} (${s.tag})</span><h3 class="text-lg font-bold text-gray-900 dark:text-white">${s.name}</h3></div>
+                        <span class="px-2.5 py-1 rounded-lg text-xs ${bcls}">${badge}</span>
+                    </div>
+                    <div class="space-y-1.5 mb-3">${row(s.id === 'mb' ? '👑 Tâm điểm:' : '👑 Vua:', s.king, true)}${row('🥈 Á hậu 1:', s.runner1)}${row('🥉 Á hậu 2:', s.runner2)}</div>
+                    <div class="pt-2 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-500 dark:text-gray-400"><i class="fa-solid ${c.icon} me-1"></i> ${insight(i, s, st)}</div>
+                </div>`;
+            }).join('');
+        }
+
+        // RENDER HEATMAP TABLE
+        function renderHeatmapTable() {
+            dayKeys();
+            const station = appState.stations[appState.currentTab];
+            const tbody = document.getElementById('heatmap-table-body');
+            const tfoot = document.getElementById('heatmap-table-foot');
+
+            document.getElementById('col-king').innerText = `👑 ${station.king} (Vua)`;
+            document.getElementById('col-runner1').innerText = `🥈 ${station.runner1} (Á hậu 1)`;
+            document.getElementById('col-runner2').innerText = `🥉 ${station.runner2} (Á hậu 2)`;
+
+            tbody.innerHTML = '';
+            let totalKingFlashes = 0, totalRunner1Flashes = 0, totalRunner2Flashes = 0;
+            let kingHitCount = 0, runner1HitCount = 0, runner2HitCount = 0;
+            const rows = station.history.slice(0, 10);
+
+            if (!rows.length) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-xs text-gray-400 italic">Chưa có dữ liệu kỳ nào. Bấm “Thêm kỳ mở thưởng” để nhập.</td></tr>`;
+            }
+
+            rows.forEach((row, idx) => {
+                totalKingFlashes += row.king; totalRunner1Flashes += row.runner1; totalRunner2Flashes += row.runner2;
+                if (row.king > 0) kingHitCount++;
+                if (row.runner1 > 0) runner1HitCount++;
+                if (row.runner2 > 0) runner2HitCount++;
+                const rowSum = row.king + row.runner1 + row.runner2;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50/80 dark:hover:bg-gray-800/30 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-xs sm:text-sm">${row.date}</td>
+                    <td class="py-3 px-4 text-center cursor-pointer select-none" onclick="toggleCell('${appState.currentTab}', ${idx}, 'king')">${formatHeatmapCell(row.king)}</td>
+                    <td class="py-3 px-4 text-center cursor-pointer select-none" onclick="toggleCell('${appState.currentTab}', ${idx}, 'runner1')">${formatHeatmapCell(row.runner1)}</td>
+                    <td class="py-3 px-4 text-center cursor-pointer select-none" onclick="toggleCell('${appState.currentTab}', ${idx}, 'runner2')">${formatHeatmapCell(row.runner2)}</td>
+                    <td class="py-3 px-4 text-center font-extrabold text-xs sm:text-sm text-gray-800 dark:text-gray-200">
+                        ${rowSum > 0 ? `<span class="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-emerald-600 dark:text-emerald-400">${rowSum} nháy</span>` : `<span class="text-gray-400">0</span>`}
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+
+            const totalDraws = rows.length;
+            tfoot.innerHTML = `
+                <td class="py-3 px-4 text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wider">Tổng nháy (${totalDraws} kỳ)</td>
+                <td class="py-3 px-4 text-center text-xs sm:text-sm text-red-600 dark:text-red-400"><strong>${kingHitCount}/${totalDraws} kỳ</strong><br><span class="text-[11px] font-normal text-gray-500">(${totalKingFlashes} nháy)</span></td>
+                <td class="py-3 px-4 text-center text-xs sm:text-sm text-gray-800 dark:text-gray-200"><strong>${runner1HitCount}/${totalDraws} kỳ</strong><br><span class="text-[11px] font-normal text-gray-500">(${totalRunner1Flashes} nháy)</span></td>
+                <td class="py-3 px-4 text-center text-xs sm:text-sm text-gray-800 dark:text-gray-200"><strong>${runner2HitCount}/${totalDraws} kỳ</strong><br><span class="text-[11px] font-normal text-gray-500">(${totalRunner2Flashes} nháy)</span></td>
+                <td class="py-3 px-4 text-center text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-extrabold">${totalKingFlashes + totalRunner1Flashes + totalRunner2Flashes} nháy</td>`;
+        }
+
+        function setThemeIcon(n) { $('theme-icon').innerHTML = `<i class="fa-solid fa-${n}"></i>`; }
+
+                // FORMAT HEATMAP CELL VALUE (🔴 / ⚪)
+        function formatHeatmapCell(val) {
+            if (val === 0) {
+                return `<span class="inline-block text-lg opacity-40 hover:opacity-100 transition-opacity" title="Vắng">⚪</span>`;
+            } else if (val === 1) {
+                return `<span class="inline-block text-lg transform hover:scale-125 transition-transform" title="1 nháy">🔴</span>`;
+            } else {
+                return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300 border border-red-300 dark:border-red-800 text-xs font-black shadow-sm transform hover:scale-110 transition-transform" title="${val} nháy">
+                    <span>🔴</span> <span>x${val}</span>
+                </span>`;
+            }
+        }
+
+        // TOGGLE CELL VALUE DIRECTLY
+        function toggleCell(stationKey, index, field) {
+            let current = appState.stations[stationKey].history[index][field];
+            // Cycle: 0 -> 1 -> 2 -> 3 -> 0
+            current = (current + 1) % 4;
+            appState.stations[stationKey].history[index][field] = current;
+            
+            saveToLocalStorage();
+            renderAll();
+            showToast("Đã cập nhật điểm nổ!");
+        }
+
+        // HANDOVER NOTES LOGIC
+        function renderHandoverNotes() {
+            const container = document.getElementById('notes-list-container');
+            container.innerHTML = '';
+
+            if (appState.notes.length === 0) {
+                container.innerHTML = `<div class="text-center py-4 text-xs text-gray-400 italic">Chưa có ghi chú nào được lưu.</div>`;
+                return;
+            }
+
+            appState.notes.forEach((note, idx) => {
+                const item = document.createElement('div');
+                item.className = "flex items-start justify-between gap-2 p-2.5 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 text-xs text-gray-700 dark:text-gray-300";
+                item.innerHTML = `
+                    <span class="leading-relaxed flex-1">${escapeHtml(note)}</span>
+                    <button onclick="deleteNote(${idx})" class="text-gray-400 hover:text-red-500 p-1">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function addHandoverNote() {
+            const input = document.getElementById('new-note-input');
+            const val = input.value.trim();
+            if (!val) return;
+
+            appState.notes.unshift(val);
+            input.value = '';
+            saveToLocalStorage();
+            renderHandoverNotes();
+            showToast("Đã lưu ghi chú mới!");
+        }
+
+        function deleteNote(index) {
+            appState.notes.splice(index, 1);
+            saveToLocalStorage();
+            renderHandoverNotes();
+        }
+
+        function clearNotes() {
+            if (confirm("Xóa toàn bộ nhật ký ghi chú?")) {
+                appState.notes = [];
+                saveToLocalStorage();
+                renderHandoverNotes();
+            }
+        }
+
+        // FILTER 3-TIER TOGGLE CONTROL
+        function toggleThreeTierFilter() {
+            const checkbox = document.getElementById('filter-toggle-switch');
+            appState.filter3TierActive = checkbox.checked;
+            
+            saveToLocalStorage();
+            updateFilterUI();
+
+            if (appState.filter3TierActive) {
+                showToast("⚠️ ĐÃ KÍCH HOẠT BỘ LỌC 3 TẦNG THEO LỆNH!", "warning");
+            } else {
+                showToast("Tạm ngưng Bộ lọc 3 tầng. Vận hành theo Cách tính bản đầu.");
+            }
+        }
+
+        function updateFilterUI() {
+            const checkbox = document.getElementById('filter-toggle-switch');
+            const statusDot = document.getElementById('filter-status-dot');
+            const statusText = document.getElementById('filter-status-text');
+
+            checkbox.checked = appState.filter3TierActive;
+
+            if (appState.filter3TierActive) {
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+                statusText.innerText = "Đã kích hoạt (Đèn Xanh / Đèn Đỏ)";
+                statusText.className = "text-emerald-600 dark:text-emerald-400 font-bold";
+            } else {
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse";
+                statusText.innerText = "Đã tạm ngưng (Bật khi có lệnh)";
+                statusText.className = "text-amber-600 dark:text-amber-400 font-bold";
+            }
+        }
+
+        // MODAL MANAGEMENT & NEW DRAW ADDITION
+        function openModal(id) {
+            // Set default today's date placeholder
+            const today = selDate;
+            const dateStr = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
+            document.getElementById('modal-date-input').value = dateStr;
+            fillModalStations();
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function fillModalStations() {
+            const sel = $('modal-station-select'), keys = dayKeys();
+            sel.innerHTML = keys.map(k => { const s = appState.stations[k]; return `<option value="${k}">${s.name} (Bộ: ${s.king} - ${s.runner1} - ${s.runner2})</option>`; }).join('');
+            sel.value = appState.currentTab;
+            updateModalNumberInputs();
+        }
+
+        function updateModalNumberInputs() {
+            const stKey = document.getElementById('modal-station-select').value;
+            const st = appState.stations[stKey];
+
+            document.getElementById('label-king').innerText = `👑 Vua (${st.king})`;
+            document.getElementById('label-runner1').innerText = `🥈 Á hậu 1 (${st.runner1})`;
+            document.getElementById('label-runner2').innerText = `🥉 Á hậu 2 (${st.runner2})`;
+        }
+
+        function handleAddDraw(e) {
+            e.preventDefault();
+            const stKey = document.getElementById('modal-station-select').value;
+            const dateStr = document.getElementById('modal-date-input').value.trim();
+            const kingVal = parseInt(document.getElementById('modal-king-val').value);
+            const r1Val = parseInt(document.getElementById('modal-runner1-val').value);
+            const r2Val = parseInt(document.getElementById('modal-runner2-val').value);
+
+            if (!dateStr) return;
+
+            // Prepend to top of history
+            appState.stations[stKey].history.unshift({
+                date: dateStr,
+                king: kingVal,
+                runner1: r1Val,
+                runner2: r2Val
+            });
+
+            saveToLocalStorage();
+            closeModal('add-draw-modal');
+            
+            // Switch to added station tab & re-render
+            switchTab(stKey);
+            showToast(`Đã thêm kỳ mở thưởng ngày ${dateStr}!`);
+        }
+
+        // DARK / LIGHT THEME TOGGLE
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                LS.set('xs_theme', 'light');
+                setThemeIcon('moon');
+            } else {
+                html.classList.add('dark');
+                LS.set('xs_theme', 'dark');
+                setThemeIcon('sun');
+            }
+        }
+
+        function applyThemeFromLocal() {
+            const theme = LS.get('xs_theme') || 'dark';
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                setThemeIcon('sun');
+            } else {
+                document.documentElement.classList.remove('dark');
+                setThemeIcon('moon');
+            }
+        }
+
+        // UTILITY: TOAST NOTIFICATIONS
+        function showToast(message, type = "success") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgColor = type === "warning" ? "bg-amber-600" : "bg-gray-900 dark:bg-emerald-600";
+            
+            toast.className = `${bgColor} text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${escapeHtml(message)}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
 <script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script>
 </body>
 </html>
